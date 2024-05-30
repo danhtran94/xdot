@@ -6,6 +6,13 @@ import (
 
 type none int
 type ErrPipe func(err error) error
+
+func (p ErrPipe) With(err error) ErrPipe {
+	return func(orig error) error {
+		return p(Wrap(orig, err))
+	}
+}
+
 type Callback func(ErrPipe)
 type TryResult[T any] struct {
 	_err   error
