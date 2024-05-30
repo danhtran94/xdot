@@ -2,6 +2,7 @@ package xdot
 
 import (
 	"errors"
+	"fmt"
 )
 
 type none int
@@ -11,6 +12,14 @@ func (p ErrPipe) With(err error) ErrPipe {
 	return func(orig error) error {
 		return p(Wrap(orig, err))
 	}
+}
+
+func (p ErrPipe) Err() error {
+	return p(nil)
+}
+
+func (p ErrPipe) Error() string {
+	return fmt.Sprintf("%v", p.Err())
 }
 
 type Callback func(ErrPipe)
