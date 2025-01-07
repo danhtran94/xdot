@@ -1,7 +1,8 @@
-package xdot
+package x
 
 import (
 	"errors"
+	"fmt"
 )
 
 type none int
@@ -9,7 +10,7 @@ type ErrPipe func(err error) error
 
 func (p ErrPipe) With(err error) ErrPipe {
 	return func(orig error) error {
-		return p(Wrap(orig, err))
+		return p(wrapErrs(orig, err))
 	}
 }
 
@@ -27,30 +28,6 @@ const (
 	NONE none = 00
 )
 
-func I[T any](val T, err error) func() (T, error) {
-	return func() (T, error) {
-		return val, err
-	}
-}
-
-func O(err error) func() (error, error) {
-	return func() (error, error) {
-		return err, err
-	}
-}
-
-func M[T any](fn func() (T, error), pipe ErrPipe) T {
-	val, err := fn()
-	checkX(pipe, err, true)
-	return val
-}
-
-func S[T any](fn func() (T, error), pipe ErrPipe) T {
-	val, err := fn()
-	checkX(pipe, err, false)
-	return val
-}
-
 func checkX(pipe ErrPipe, err error, quit bool) {
 	if err != nil {
 		_err := pipe(err)
@@ -60,7 +37,7 @@ func checkX(pipe ErrPipe, err error, quit bool) {
 	}
 }
 
-func NewTry[T any](result T) *TryResult[T] {
+func Try[T any](result T) *TryResult[T] {
 	return &TryResult[T]{
 		Result: result,
 	}
@@ -70,7 +47,7 @@ func (tr *TryResult[T]) Return() (T, error) {
 	return tr.Result, tr._err
 }
 
-func (tr *TryResult[T]) Try(callback Callback) (err error) {
+func (tr *TryResult[T]) Call(callback Callback) (err error) {
 	defer func() {
 		r := recover()
 		if r == nil {
@@ -104,4 +81,42 @@ func (tr *TryResult[T]) Try(callback Callback) (err error) {
 		})
 
 	return tr._err
+}
+
+func Must0(err error) func(ErrPipe) {
+	return func(pipe ErrPipe) {
+		checkX(pipe, err, true)
+	}
+}
+
+func Must[T any](val T, err error) func(ErrPipe) T {
+	return func(pipe ErrPipe) T {
+		checkX(pipe, err, true)
+		return val
+	}
+}
+
+func Should0(err error) func(ErrPipe) {
+	return func(pipe ErrPipe) {
+		checkX(pipe, err, false)
+	}
+}
+
+func Should[T any](val T, err error) func(ErrPipe) T {
+	return func(pipe ErrPipe) T {
+		checkX(pipe, err, false)
+		return val
+	}
+}
+
+func wrapErrs(orig error, err error) error {
+	if err == nil {
+		return orig
+	}
+
+	if orig != nil {
+		return fmt.Errorf("%w; %w", err, orig)
+	}
+
+	return nil
 }

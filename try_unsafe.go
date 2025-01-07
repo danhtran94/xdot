@@ -1,16 +1,17 @@
-package xdot
+package x
 
 import "errors"
 
 type ErrHandler func(error)
 
-// TryPipe Example:
+// TryUnsafe is a function that returns a defer function and a pipe function. The defer function is used to handle the error,
+// use it when you want to handle the error in the defer block instead of the nested block of try's call block.
 //
 //	try, pipe := TryPipe()
 //	defer try(func(err error) {
 //		fmt.Println(err)
 //	})
-func TryPipe() (deferTry func(...ErrHandler), pipe ErrPipe) {
+func TryUnsafe() (deferTry func(...ErrHandler), pipe ErrPipe) {
 	var _err error
 
 	pipe = func(err error) error {
@@ -47,30 +48,4 @@ func TryPipe() (deferTry func(...ErrHandler), pipe ErrPipe) {
 	}
 
 	return deferTry, pipe
-}
-
-func Must0(err error) func(ErrPipe) {
-	return func(pipe ErrPipe) {
-		checkX(pipe, err, true)
-	}
-}
-
-func Must[T any](val T, err error) func(ErrPipe) T {
-	return func(pipe ErrPipe) T {
-		checkX(pipe, err, true)
-		return val
-	}
-}
-
-func Should0(err error) func(ErrPipe) {
-	return func(pipe ErrPipe) {
-		checkX(pipe, err, false)
-	}
-}
-
-func Should[T any](val T, err error) func(ErrPipe) T {
-	return func(pipe ErrPipe) T {
-		checkX(pipe, err, false)
-		return val
-	}
 }
