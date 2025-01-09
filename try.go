@@ -14,6 +14,16 @@ func (p ErrPipe) With(err error) ErrPipe {
 	}
 }
 
+func (p ErrPipe) When(trigger bool) ErrPipe {
+	return func(err error) error {
+		if trigger {
+			return p(err)
+		}
+
+		return p(nil)
+	}
+}
+
 func (p ErrPipe) Err() error {
 	return p(nil)
 }
