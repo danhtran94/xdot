@@ -53,6 +53,12 @@ func Try[T any](result T) *TryResult[T] {
 	}
 }
 
+func Try0() *TryResult[none] {
+	return &TryResult[none]{
+		Result: NONE,
+	}
+}
+
 func (tr *TryResult[T]) Return() (T, error) {
 	return tr.Result, tr._err
 }
