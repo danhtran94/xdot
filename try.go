@@ -41,7 +41,7 @@ const (
 func checkX(pipe ErrPipe, err error, quit bool) {
 	if err != nil {
 		_err := pipe(err)
-		if quit {
+		if quit && _err != nil {
 			panic(_err)
 		}
 	}
